@@ -151,7 +151,7 @@ Se uma compensação falhar temporariamente, ela poderá ser repetida de forma s
 
 Se um pagamento já tiver sido capturado e uma etapa posterior falhar, pode ser necessário executar `RefundPayment`. Cancelar um pedido não desfaz automaticamente uma transação financeira externa.
 
-## 9. Matriz resumida de riscos e mitigação
+## Matriz resumida de riscos e mitigação
 
 | Risco | Mitigação proposta |
 |---|---|
@@ -165,7 +165,7 @@ Se um pagamento já tiver sido capturado e uma etapa posterior falhar, pode ser 
 | Reserva esquecida | TTL, expiração e reconciliação |
 | Compensação não concluída | Retentativas, revisão manual e auditoria |
 
-## 10. Referências técnicas
+## Referências técnicas
 
 - MICROSOFT. **Saga distributed transactions pattern**. Azure Architecture Center. https://learn.microsoft.com/en-us/azure/architecture/microservices/design/patterns
 - MICROSOFT. **Transactional Outbox pattern**. Azure Architecture Center. https://learn.microsoft.com/en-us/azure/architecture/databases/guide/transactional-outbox-cosmos

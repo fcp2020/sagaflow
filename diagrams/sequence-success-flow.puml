@@ -1,0 +1,44 @@
+@startuml saga_success
+title SagaFlow - Fluxo de sucesso
+title SagaFlow — Fluxo de sucesso
+autonumber
+actor Cliente
+participant "Checkout API" as API
+participant "Order Service" as Order
+database "Order DB" as ODB
+participant "Saga Orchestrator" as Saga
+queue "Message Broker" as Broker
+participant "Inventory Service" as Inv
+participant "Payment Service" as Pay
+participant "Gateway financeiro" as Gateway
+
+Cliente -> API : Enviar compra
+API -> Order : CreateOrder
+Order -> ODB : INSERT status=PENDING
+ODB --> Order : Commit
+Order --> API : orderId, PENDING
+API --> Cliente : 202 Accepted + orderId
+API -> Saga : StartSaga(orderId)
+Saga -> Saga : Persistir STARTED
+Saga -> Broker : ReserveStock(sagaId, orderId)
+Broker -> Inv : ReserveStock
+Inv -> Inv : Validar disponibilidade
+Inv -> Inv : Criar reserva com TTL
+Inv -> Broker : StockReserved
+Broker -> Saga : StockReserved
+Saga -> Saga : Persistir PROCESSING_PAYMENT
+Saga -> Broker : ProcessPayment(idempotencyKey)
+Broker -> Pay : ProcessPayment
+Pay -> Gateway : Autorizar/capturar com chave idempotente
+Gateway --> Pay : Aprovado
+Pay -> Broker : PaymentApproved
+Broker -> Saga : PaymentApproved
+Saga -> Saga : Persistir CONFIRMING_ORDER
+Saga -> Broker : ConfirmOrder
+Broker -> Order : ConfirmOrder
+Order -> ODB : UPDATE status=CONFIRMED
+Order -> Broker : OrderConfirmed
+Broker -> Saga : OrderConfirmed
+Saga -> Saga : Persistir COMPLETED
+Saga --> API : Estado final consultável
+@enduml

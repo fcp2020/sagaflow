@@ -1,0 +1,48 @@
+@startuml sequence_compensation_flow
+title SagaFlow — Recusa de pagamento e compensação
+autonumber
+participant "Saga Orchestrator" as Saga
+database "Saga State DB" as SDB
+queue "Message Broker" as Broker
+participant "Inventory Service" as Inv
+database "Inventory DB" as IDB
+participant "Payment Service" as Pay
+participant "Gateway financeiro" as Gateway
+participant "Order Service" as Order
+database "Order DB" as ODB
+
+Saga -> SDB : Persistir RESERVING_STOCK
+Saga -> Broker : ReserveStock
+Broker -> Inv : ReserveStock
+Inv -> IDB : Criar reserva ACTIVE
+Inv -> Broker : StockReserved
+Broker -> Saga : StockReserved
+
+Saga -> SDB : Persistir PROCESSING_PAYMENT
+Saga -> Broker : ProcessPayment(idempotencyKey)
+Broker -> Pay : ProcessPayment
+Pay -> Gateway : Autorizar pagamento
+Gateway --> Pay : Recusado
+Pay -> Broker : PaymentDeclined(reasonCode)
+Broker -> Saga : PaymentDeclined
+
+Saga -> SDB : Persistir COMPENSATING
+Saga -> Broker : CancelOrder(reason=PAYMENT_DECLINED)
+Broker -> Order : CancelOrder
+Order -> ODB : UPDATE status=CANCELLED
+Order -> Broker : OrderCancelled
+Broker -> Saga : OrderCancelled
+
+Saga -> Broker : ReleaseStock(reservationId)
+Broker -> Inv : ReleaseStock
+Inv -> IDB : ACTIVE -> RELEASED
+Inv -> Broker : StockReleased
+Broker -> Saga : StockReleased
+Saga -> SDB : Persistir COMPENSATED
+
+note over Saga, SDB
+Se uma compensação falhar:
+retry limitado e idempotente.
+Após o limite, MANUAL_REVIEW + alerta.
+end note
+@enduml

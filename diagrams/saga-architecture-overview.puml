@@ -1,0 +1,40 @@
+@startuml saga_architecture_overview
+title SagaFlow — Visão geral da arquitetura
+left to right direction
+skinparam componentStyle rectangle
+skinparam shadowing false
+
+actor "Cliente" as Customer
+component "API / Checkout" as API
+component "Order Service" as Order
+database "Order DB" as OrderDB
+component "Saga Orchestrator\n(persistente)" as Saga
+database "Saga State DB" as SagaDB
+queue "Message Broker" as Broker
+component "Inventory Service" as Inventory
+database "Inventory DB" as InventoryDB
+component "Payment Service" as Payment
+database "Payment DB" as PaymentDB
+cloud "Gateway financeiro" as Gateway
+
+Customer --> API : Solicitar compra
+API --> Order : Criar pedido
+Order --> OrderDB : Transação local
+API --> Saga : Iniciar Saga / orderId
+Saga --> SagaDB : Persistir estado
+Saga --> Broker : Publicar comandos
+Broker --> Saga : Entregar eventos
+Broker <--> Order : ConfirmOrder / CancelOrder\nOrderConfirmed / OrderCancelled
+Order --> OrderDB
+Broker <--> Inventory : ReserveStock / ReleaseStock\nStockReserved / StockReleased
+Inventory --> InventoryDB
+Broker <--> Payment : ProcessPayment\nPaymentApproved / PaymentDeclined
+Payment --> PaymentDB
+Payment --> Gateway : Requisição idempotente
+Gateway --> Payment : Resultado
+
+note bottom of Saga
+O orquestrador coordena transações locais.
+Não existe uma transação ACID global.
+end note
+@enduml

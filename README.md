@@ -71,7 +71,7 @@ Arquivo-fonte editável: [`sequence-compensation-flow.puml`](diagrams/sequence-c
 
 O diagrama a seguir apresenta os principais componentes, suas bases de dados e a comunicação por comandos e eventos.
 
-![Visão geral da arquitetura SagaFlow](diagrams/saga-architecture_overview.png)
+![Visão geral da arquitetura SagaFlow](diagrams/saga_architecture_overview.png)
 
 Arquivo-fonte editável: [`saga-architecture-overview.puml`](diagrams/saga-architecture-overview.puml).
 
